@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Pembelajaran Futuristik - Kelas 2</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Fredoka:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .futuristic-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .neon-border-cyan { border: 2px solid #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+        .neon-border-purple { border: 2px solid #a855f7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+        .neon-text-cyan { text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); color: #22d3ee; }
+        .neon-text-purple { text-shadow: 0 0 10px rgba(168, 85, 247, 0.8); color: #d8b4fe; }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(34, 211, 238, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(34, 211, 238, 0.2); }
+        }
+        
+        .animate-pulse-glow { animation: pulse-glow 3s infinite; }
+
+        /* Animations from previous version */
+        @keyframes drop {
+          0% { transform: translateY(-50px) scale(0); opacity: 0; }
+          60% { transform: translateY(5px) scale(1.2); opacity: 1; }
+          100% { transform: translateY(0) scale(1); }
+        }
+        .animate-drop { animation: drop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .clock-hand {
+            transform-origin: bottom center;
+            transition: transform 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .no-select { user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Ikon Komponen (SVG) ---
+        const IconHome = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        );
+        const IconScale = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+        );
+        const IconClock = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        );
+        const IconRefreshCcw = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        );
+        const IconPlus = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        );
+        const IconMinus = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/></svg>
+        );
+        const IconCheckCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        );
+
+        // ==========================================
+        // 1. APLIKASI TIMBANGAN (WEIGHT APP)
+        // ==========================================
+        const WeightApp = ({ onBack }) => {
+            const objects = [
+                { id: 1, name: 'Boneka', weight: 6, icon: '🧸', color: 'bg-pink-900/40 border-pink-500', textColor: 'text-pink-200' },
+                { id: 2, name: 'Buku', weight: 10, icon: '📕', color: 'bg-blue-900/40 border-blue-500', textColor: 'text-blue-200' },
+                { id: 3, name: 'Bola', weight: 4, icon: '⚽', color: 'bg-orange-900/40 border-orange-500', textColor: 'text-orange-200' },
+                { id: 4, name: 'Tempat Pensil', weight: 4, icon: '✏️', color: 'bg-purple-900/40 border-purple-500', textColor: 'text-purple-200' }
+            ];
+
+            const [selectedObject, setSelectedObject] = useState(null);
+            const [objectCount, setObjectCount] = useState(1);
+            const [marbleCount, setMarbleCount] = useState(0);
+            const [rotation, setRotation] = useState(0);
+            const [feedback, setFeedback] = useState("Pilih benda luar angkasa untuk ditimbang!");
+            const [isBalanced, setIsBalanced] = useState(false);
+            const [showConfetti, setShowConfetti] = useState(false);
+
+            const handleSelectObject = (obj) => {
+                setSelectedObject(obj);
+                setObjectCount(1);
+                setMarbleCount(0);
+                setIsBalanced(false);
+                setShowConfetti(false);
+                setRotation(-15); 
+                setFeedback(`Deteksi berat 1 ${obj.name}...`);
+            };
+
+            const addObjectCount = () => {
+                if (!selectedObject || objectCount >= 5) return;
+                setObjectCount(prev => prev + 1);
+                setIsBalanced(false);
+                setShowConfetti(false);
+            };
+
+            const removeObjectCount = () => {
+                if (!selectedObject || objectCount <= 1) return;
+                setObjectCount(prev => prev - 1);
+                setIsBalanced(false);
+                setShowConfetti(false);
+            };
+
+            const addMarble = () => {
+                if (!selectedObject) return;
+                setMarbleCount(prev => prev + 1);
+            };
+
+            const removeMarble = () => {
+                if (!selectedObject || marbleCount <= 0) return;
+                setMarbleCount(prev => prev - 1);
+            };
+
+            useEffect(() => {
+                if (!selectedObject) {
+                    setRotation(0);
+                    return;
+                }
+
+                const target = selectedObject.weight * objectCount;
+                const current = marbleCount;
+
+                if (current === target) {
+                    setRotation(0);
+                    setFeedback(`🎉 DATA VALID! Berat ${objectCount} ${selectedObject.name} = ${current} Kelereng! 🎉`);
+                    setIsBalanced(true);
+                    setShowConfetti(true);
+                } else if (current < target) {
+                    let angle = -20 + (current / target) * 15; 
+                    setRotation(Math.min(angle, -3)); 
+                    setFeedback(`Mencari keseimbangan... Tambahkan kelereng!`);
+                    setIsBalanced(false);
+                    setShowConfetti(false);
+                } else {
+                    setRotation(15);
+                    setFeedback("Kelebihan muatan! Kurangi kelereng.");
+                    setIsBalanced(false);
+                    setShowConfetti(false);
+                }
+            }, [marbleCount, selectedObject, objectCount]);
+
+            const handleReset = () => {
+                setSelectedObject(null);
+                setObjectCount(1);
+                setMarbleCount(0);
+                setRotation(0);
+                setFeedback("Pilih benda untuk ditimbang!");
+                setIsBalanced(false);
+                setShowConfetti(false);
+            };
+
+            return (
+                <div className="flex flex-col items-center w-full animate-fade-in p-4">
+                    {/* Header App */}
+                    <div className="w-full max-w-4xl flex justify-between items-center glass-card p-4 rounded-2xl mb-6 neon-border-cyan">
+                        <div className="flex items-center gap-3">
+                            <IconScale className="text-cyan-400 w-8 h-8 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                            <h1 className="text-xl md:text-2xl font-bold futuristic-font neon-text-cyan">LAB TIMBANGAN 2.0</h1>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={handleReset} className="flex items-center gap-2 px-4 py-2 bg-yellow-600/80 hover:bg-yellow-500 text-white rounded-xl font-bold text-sm shadow-md transition">
+                                <IconRefreshCcw className="w-4 h-4" /> RESET
+                            </button>
+                            <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 bg-slate-700/80 hover:bg-slate-600 text-white rounded-xl font-bold text-sm shadow-md transition">
+                                <IconHome className="w-4 h-4" /> MENU
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-4xl flex flex-col md:flex-row gap-6">
+                        {/* Left Panel */}
+                        <div className="w-full md:w-1/3 space-y-4">
+                            <div className="glass-card p-5 rounded-3xl border border-white/10">
+                                <h2 className="text-sm futuristic-font text-cyan-300 mb-4 text-center tracking-widest uppercase">1. Scan Objek</h2>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {objects.map((obj) => (
+                                        <button key={obj.id} onClick={() => handleSelectObject(obj)} className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${selectedObject?.id === obj.id ? 'bg-cyan-500/30 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : `${obj.color} hover:bg-white/10`}`}>
+                                            <span className="text-4xl mb-2 drop-shadow-lg">{obj.icon}</span>
+                                            <span className="font-bold text-white text-xs futuristic-font">{obj.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {selectedObject && (
+                                <div className="glass-card p-5 rounded-3xl border border-white/10 animate-fade-in">
+                                    <h2 className="text-sm futuristic-font text-purple-300 mb-4 text-center tracking-widest uppercase">2. Kuantitas</h2>
+                                    <div className="flex items-center justify-between bg-black/30 p-3 rounded-xl border border-white/10">
+                                        <button onClick={removeObjectCount} disabled={objectCount <= 1} className="p-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 disabled:opacity-20 transition"><IconMinus className="w-5 h-5" /></button>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-4xl font-bold futuristic-font text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{objectCount}</span>
+                                        </div>
+                                        <button onClick={addObjectCount} disabled={objectCount >= 5} className="p-2 bg-green-500/20 text-green-400 border border-green-500/50 rounded-lg hover:bg-green-500/40 disabled:opacity-20 transition"><IconPlus className="w-5 h-5" /></button>
+                                    </div>
+                                    <p className="mt-4 text-center text-xs text-slate-400 italic">"Selidiki jumlah kelereng energi"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Panel */}
+                        <div className="w-full md:w-2/3 flex flex-col items-center">
+                            <div className={`w-full text-center p-3 rounded-xl mb-6 font-bold text-sm futuristic-font transition-all duration-500 border-2 ${isBalanced ? 'bg-green-900/50 text-green-300 border-green-400 neon-border-cyan animate-pulse' : 'bg-black/30 text-cyan-200 border-white/10'}`}>
+                                &gt; {feedback}
+                            </div>
+
+                            <div className="relative w-full h-80 flex justify-center items-end mb-4 select-none">
+                                {/* Robotic Base */}
+                                <div className="absolute bottom-0 w-36 h-20 bg-slate-800 rounded-t-2xl z-10 shadow-inner border-t-2 border-cyan-500/30">
+                                    <div className="w-full h-2 bg-cyan-400/20 animate-pulse mt-4"></div>
+                                </div>
+                                <div className="absolute bottom-0 w-6 h-48 bg-gradient-to-b from-slate-600 to-slate-800 z-0 rounded-t-lg"></div>
+
+                                {/* Robotic Beam */}
+                                <div className="absolute top-24 w-full md:w-4/5 h-4 bg-slate-700 border-x-4 border-cyan-500 rounded-full transition-transform duration-700 ease-in-out origin-center z-20 shadow-xl flex justify-between items-center" style={{ transform: `rotate(${rotation}deg)` }}>
+                                    {/* Left Pan */}
+                                    <div className="relative h-44 w-1 bg-cyan-500/40 left-6 top-20 flex flex-col items-center">
+                                        <div className="absolute bottom-0 w-36 h-12 bg-cyan-900/60 backdrop-blur-md rounded-b-3xl border-2 border-cyan-500/50 flex flex-wrap-reverse content-start justify-center items-end p-2 gap-1 transform translate-y-full">
+                                            {selectedObject && Array.from({ length: objectCount }).map((_, i) => (
+                                                <div key={i} className="text-5xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] transform animate-bounce-slow" style={{ animationDelay: `${i * 0.1}s` }}>{selectedObject.icon}</div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Center Core */}
+                                    <div className="w-10 h-10 bg-black rounded-full border-4 border-cyan-400 z-30 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.8)]">
+                                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+                                    </div>
+
+                                    {/* Right Pan */}
+                                    <div className="relative h-44 w-1 bg-purple-500/40 right-6 top-20 flex flex-col items-center">
+                                        <div className="absolute bottom-0 w-36 h-12 bg-purple-900/60 backdrop-blur-md rounded-b-3xl border-2 border-purple-500/50 flex flex-wrap-reverse content-start justify-center items-end p-1 gap-0.5 transform translate-y-full">
+                                            {Array.from({ length: marbleCount }).map((_, i) => (
+                                                <span key={i} className="text-lg animate-drop">🔮</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {showConfetti && (
+                                    <div className="absolute inset-0 pointer-events-none flex justify-center items-start z-50 overflow-hidden">
+                                        <div className="text-4xl animate-bounce">⚡</div>
+                                        <div className="text-4xl animate-pulse delay-75">✨</div>
+                                        <div className="text-4xl animate-bounce delay-150">🔵</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Controls */}
+                            <div className={`w-full max-w-md flex flex-col items-center glass-card p-6 rounded-3xl transition-opacity duration-300 ${!selectedObject ? 'opacity-30 pointer-events-none' : 'opacity-100'} border-purple-500/30`}>
+                                <h3 className="text-slate-300 text-xs futuristic-font mb-4 tracking-tighter uppercase flex items-center gap-2">
+                                    Power Core Count: 
+                                    <span className="text-4xl neon-text-purple font-bold px-4 py-1 rounded-xl bg-purple-900/30 border border-purple-500/20">
+                                        {marbleCount}
+                                    </span>
+                                </h3>
+                                <div className="flex items-center gap-8">
+                                    <button onClick={removeMarble} disabled={marbleCount === 0} className="w-16 h-16 rounded-2xl bg-slate-800 border-2 border-red-500/40 text-red-400 flex items-center justify-center hover:bg-red-500/10 hover:border-red-500 transition-all shadow-lg active:scale-95 disabled:opacity-20">
+                                        <IconMinus className="w-8 h-8" />
+                                    </button>
+                                    <button onClick={addMarble} disabled={isBalanced} className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-xl transform transition-all active:scale-90 ${isBalanced ? 'bg-green-600 border-green-400 opacity-50' : 'bg-purple-600 border-purple-400 hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] animate-pulse-glow'}`}>
+                                        {isBalanced ? <IconCheckCircle className="w-14 h-14" /> : <IconPlus className="w-14 h-14" />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 2. APLIKASI JAM (TIME APP)
+        // ==========================================
+        const TimeApp = ({ onBack }) => {
+            const [totalMinutes, setTotalMinutes] = useState(9 * 60); 
+            const [activeHand, setActiveHand] = useState('minute'); 
+            const clockRef = useRef(null);
+            const [isDragging, setIsDragging] = useState(false);
+
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const hours12 = hours % 12 || 12;
+
+            const minuteDeg = minutes * 6;
+            const hourDeg = (hours % 12) * 30 + (minutes * 0.5);
+
+            const updateTimeFromPointer = (clientX, clientY) => {
+                if (!clockRef.current) return;
+                const rect = clockRef.current.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const x = clientX - centerX;
+                const y = clientY - centerY;
+                let angle = Math.atan2(y, x) * (180 / Math.PI) + 90; 
+                if (angle < 0) angle += 360;
+
+                if (activeHand === 'minute') {
+                    const safeMinute = Math.round(angle / 6) % 60;
+                    let diff = safeMinute - minutes;
+                    if (diff < -30) diff += 60; 
+                    else if (diff > 30) diff -= 60; 
+                    setTotalMinutes(prev => (prev + diff + 1440) % 1440);
+                } else {
+                    let rawHour = Math.round(angle / 30);
+                    const newHourVal = rawHour === 12 ? 0 : rawHour % 12;
+                    setTotalMinutes((newHourVal * 60) + minutes);
+                }
+            };
+
+            const handlePointer = (e) => {
+                if (isDragging || e.type === 'mousedown' || e.type === 'touchstart') {
+                    const clientX = e.clientX || e.touches[0].clientX;
+                    const clientY = e.clientY || e.touches[0].clientY;
+                    updateTimeFromPointer(clientX, clientY);
+                }
+            };
+
+            useEffect(() => {
+                const up = () => setIsDragging(false);
+                window.addEventListener('mouseup', up);
+                window.addEventListener('touchend', up);
+                return () => {
+                    window.removeEventListener('mouseup', up);
+                    window.removeEventListener('touchend', up);
+                };
+            }, []);
+
+            return (
+                <div className="flex flex-col items-center w-full animate-fade-in no-select p-4">
+                    <div className="w-full max-w-4xl flex justify-between items-center glass-card p-4 rounded-2xl mb-8 neon-border-purple">
+                        <div className="flex items-center gap-3">
+                            <IconClock className="text-purple-400 w-8 h-8 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                            <h1 className="text-xl md:text-2xl font-bold futuristic-font neon-text-purple">NAVIGASI WAKTU</h1>
+                        </div>
+                        <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 bg-slate-700/80 hover:bg-slate-600 text-white rounded-xl font-bold text-sm shadow-md transition">
+                            <IconHome className="w-4 h-4" /> MENU
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-12 items-center justify-center w-full max-w-5xl">
+                        {/* Selector */}
+                        <div className="flex flex-col gap-4 w-full md:w-auto order-2 md:order-1">
+                            <h3 className="text-center font-bold futuristic-font text-xs text-slate-500 mb-2 uppercase tracking-widest">Pilih Komponen:</h3>
+                            <button onClick={() => setActiveHand('minute')} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all shadow-md ${activeHand === 'minute' ? 'bg-purple-500/30 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)]' : 'bg-black/20 border-white/10 opacity-50'}`}>
+                                <div className="w-8 h-1 bg-purple-400 rounded-full"></div>
+                                <span className="font-bold futuristic-font text-xs text-white">MENIT-TRANSMITTER</span>
+                            </button>
+                            <button onClick={() => setActiveHand('hour')} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all shadow-md ${activeHand === 'hour' ? 'bg-slate-500/30 border-slate-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-black/20 border-white/10 opacity-50'}`}>
+                                <div className="w-6 h-2 bg-slate-100 rounded-full"></div>
+                                <span className="font-bold futuristic-font text-xs text-white">JAM-PROSESSOR</span>
+                            </button>
+                        </div>
+
+                        {/* Analog Clock */}
+                        <div className="relative order-1 md:order-2">
+                            <div 
+                                ref={clockRef}
+                                onMouseDown={(e) => {setIsDragging(true); handlePointer(e);}}
+                                onMouseMove={handlePointer}
+                                onTouchStart={(e) => {setIsDragging(true); handlePointer(e);}}
+                                onTouchMove={handlePointer}
+                                className={`w-72 h-72 md:w-96 md:h-96 rounded-full glass-card relative cursor-crosshair touch-none transition-all duration-300 ${activeHand === 'minute' ? 'neon-border-purple' : 'neon-border-cyan'}`}
+                                style={{
+                                    borderWidth: '16px',
+                                    borderColor: '#0f172a',
+                                    boxShadow: activeHand === 'minute' ? '0 0 40px rgba(168,85,247,0.3), inset 0 0 20px rgba(168,85,247,0.2)' : '0 0 40px rgba(34,211,238,0.3), inset 0 0 20px rgba(34,211,238,0.2)'
+                                }}
+                            >
+                                <div className="absolute top-1/2 left-1/2 w-6 h-6 bg-purple-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30 shadow-[0_0_15px_#a855f7] border-2 border-white"></div>
+                                
+                                {/* Numbers 1-12 */}
+                                {[...Array(12)].map((_, i) => {
+                                    const num = i + 1;
+                                    const angleRad = (num * 30 - 90) * (Math.PI / 180);
+                                    const left = 50 + 38 * Math.cos(angleRad);
+                                    const top = 50 + 38 * Math.sin(angleRad);
+                                    return (
+                                        <div key={num} className="absolute transform -translate-x-1/2 -translate-y-1/2 futuristic-font font-bold text-slate-300 pointer-events-none z-10" style={{ left: `${left}%`, top: `${top}%`, fontSize: '2rem' }}>
+                                            {num}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Ticks */}
+                                {[...Array(60)].map((_, i) => (
+                                    <div key={i} className="absolute top-0 left-1/2 transform -translate-x-1/2 origin-bottom pointer-events-none" style={{ height: '50%', transform: `translateX(-50%) rotate(${i * 6}deg)` }}>
+                                        <div className={`${i % 5 === 0 ? 'w-1 h-3 bg-cyan-400' : 'w-0.5 h-1 bg-slate-600'} mt-1`}></div>
+                                    </div>
+                                ))}
+
+                                {/* Hour Hand */}
+                                <div className={`absolute top-1/2 left-1/2 w-3 md:w-4 bg-white rounded-full shadow-lg clock-hand z-10 pointer-events-none ${activeHand === 'hour' ? 'opacity-100' : 'opacity-40'}`} style={{ height: '24%', transform: `translate(-50%, -100%) rotate(${hourDeg}deg)` }}>
+                                    {activeHand === 'hour' && <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_10px_#22d3ee]"></div>}
+                                </div>
+
+                                {/* Minute Hand */}
+                                <div className={`absolute top-1/2 left-1/2 w-2 bg-purple-500 rounded-full shadow-lg clock-hand z-20 pointer-events-none ${activeHand === 'minute' ? 'opacity-100' : 'opacity-40'}`} style={{ height: '40%', transform: `translate(-50%, -100%) rotate(${minuteDeg}deg)` }}>
+                                    {activeHand === 'minute' && <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-purple-400 rounded-full shadow-[0_0_10px_#a855f7]"></div>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Digital Display */}
+                        <div className="flex flex-col items-center order-3 w-full md:w-auto">
+                            <div className="bg-black/60 p-6 rounded-3xl border-4 border-slate-700 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]">
+                                <div className="text-6xl md:text-8xl futuristic-font font-bold neon-text-cyan tracking-widest px-8 py-4">
+                                    {String(hours).padStart(2, '0')}<span className="animate-pulse">:</span>{String(minutes).padStart(2, '0')}
+                                </div>
+                            </div>
+                            <div className="mt-8 text-center bg-white/5 p-6 rounded-2xl border border-white/10 w-full backdrop-blur-sm">
+                                <p className={`text-xl futuristic-font transition-all ${activeHand === 'hour' ? 'text-white' : 'text-slate-600'}`}>JAM: {hours12}</p>
+                                <p className={`text-xl futuristic-font transition-all ${activeHand === 'minute' ? 'text-purple-300' : 'text-slate-600'}`}>MENIT: {minutes}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 3. KOMPONEN UTAMA (HOME)
+        // ==========================================
+        const MainApp = () => {
+            const [view, setView] = useState('home');
+
+            if (view === 'weight') return <WeightApp onBack={() => setView('home')} />;
+            if (view === 'time') return <TimeApp onBack={() => setView('home')} />;
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade-in relative">
+                    {/* Background decoration */}
+                    <div className="absolute top-10 left-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                    <div className="absolute bottom-10 right-10 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+                    <div className="text-center mb-16 relative z-10">
+                        <h1 className="text-4xl md:text-7xl font-bold futuristic-font neon-text-cyan mb-4 tracking-tighter">FUTURE LEARN 2</h1>
+                        <p className="text-slate-400 futuristic-font tracking-[0.3em] text-sm uppercase">Pusat Pembelajaran Interaktif</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl px-4 relative z-10">
+                        <button onClick={() => setView('weight')} className="group relative glass-card p-10 rounded-[3rem] transition-all duration-500 hover:scale-105 border-b-8 border-cyan-500/50 hover:neon-border-cyan overflow-hidden">
+                            <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="flex flex-col items-center relative z-10">
+                                <div className="w-28 h-28 bg-cyan-900/30 rounded-3xl flex items-center justify-center mb-8 border border-cyan-500/30 group-hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] transition-all">
+                                    <IconScale className="w-14 h-14 text-cyan-400" />
+                                </div>
+                                <h2 className="text-2xl font-bold futuristic-font text-white mb-4 tracking-wider">SATUAN BERAT</h2>
+                                <p className="text-slate-400 text-sm italic">Eksperimen massa kelereng antargalaksi.</p>
+                            </div>
+                        </button>
+
+                        <button onClick={() => setView('time')} className="group relative glass-card p-10 rounded-[3rem] transition-all duration-500 hover:scale-105 border-b-8 border-purple-500/50 hover:neon-border-purple overflow-hidden">
+                            <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="flex flex-col items-center relative z-10">
+                                <div className="w-28 h-28 bg-purple-900/30 rounded-3xl flex items-center justify-center mb-8 border border-purple-500/30 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all">
+                                    <IconClock className="w-14 h-14 text-purple-400" />
+                                </div>
+                                <h2 className="text-2xl font-bold futuristic-font text-white mb-4 tracking-wider">SATUAN WAKTU</h2>
+                                <p className="text-slate-400 text-sm italic">Navigasi portal waktu analog & digital.</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <footer className="mt-20 text-slate-500 text-xs futuristic-font tracking-widest uppercase py-4 border-t border-white/5 w-full max-w-lg text-center">
+                        created by: guru kelas 2
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MainApp />);
+    </script>
+</body>
+</html>
